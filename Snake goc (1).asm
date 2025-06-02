@@ -1,0 +1,619 @@
+data segment
+    main1 db "ROBOT Rescue"
+    main2 db "Hay thu thap du 4 chu cai theo thu tu sau:" 
+    main3 db "'O' -> 'B' -> 'O' -> 'T'"              
+    main4 db "Di chuyen bang A,W,S,D"                
+    main5 db "W: LEN"                                
+    main6 db "S: XUONG"                              
+    main7 db "D: PHAI"                              
+    main8 db "A: TRAI"                               
+    main9 db "Chuc ban may man !!!"                  
+    main10 db "Press any key to start..."
+
+    hlths db "Lives:",3,3,3  
+
+    letadd dw 09b4h,0848h,06b0h,01E8h,4 Dup(0)
+
+    dletadd dw 09b4h,0848h,06b0h,01E8h,4 Dup(0)
+
+    letnum db 4
+
+    fin db 4
+
+    hlth db 6                  
+    sadd dw 07D2h,5 Dup(0)
+
+    snake db 'R',5 Dup(0)
+
+    snakel db 1
+
+    gmwin db "Rescue Complete!"
+    gmov db "Mission Failed!"
+    endtxt db "Press esc to exit"
+ends
+
+stack segment
+    dw  128 dup(0)
+ends
+
+code segment
+start:
+    mov ah,1
+    int 21h
+    mov ax, data
+    mov ds, ax
+
+    mov ax,0b800h
+    mov es, ax
+
+    cld
+
+    ;AN CON TRO CHUOT
+    mov ah,1
+    mov ch,2bh
+    mov cl,0bh
+    int 10h
+
+    call main_menu
+
+startag:
+
+    call bild
+
+    xor cl,cl
+    xor dl,dl
+read:           
+    call delay
+    mov ah,1
+    int 16h
+    jz s1
+    mov ah,0
+    int 16h
+    and al,0dfh
+    mov dl,al
+    jmp s1
+
+s1:
+    cmp dl,1bh
+    je ext
+
+left:
+    cmp dl,'A'
+    jne right
+    call ml
+    mov cl,dl
+    jmp read
+
+right:
+    cmp dl,'D'
+    jne up
+    call mr
+    mov cl,dl
+    jmp read
+
+up:
+    cmp dl,'W'
+    jne down
+    call mu
+    mov cl,dl
+    jmp read
+
+down:
+    cmp dl,'S'
+    jne read1
+    call md
+    mov cl,dl
+    jmp read
+
+read1:
+    mov dl,cl
+    jmp read
+
+ext:
+    xor cx,cx
+    mov dh,24
+    mov dl,79
+    mov bh,0
+    mov ax,700h
+    int 10h
+
+    mov ah, 4ch
+    int 21h
+ends
+
+;main menu
+main_menu proc
+    call border
+
+    mov di, 224h
+    lea si,main1
+    mov cx,12
+    mov ah,5ah
+lopem1:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem1
+
+    mov di, 348h
+    lea si,main2
+    mov cx,42
+    mov ah,0fh
+lopem2:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem2
+
+    mov di, 0498h
+    lea si,main3
+    mov cx,24
+    mov ah,0fh
+lopem3:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem3
+
+    mov di, 05DAh
+    lea si,main4
+    mov cx,22
+    mov ah,0fh
+lopem4:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem4
+
+    mov di, 728h
+    lea si,main5
+    mov cx,6
+    mov ah,0fh
+lopem5:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem5
+
+    mov di, 7C8h
+    lea si,main6
+    mov cx,8
+    mov ah,0fh
+lopem6:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem6
+
+    mov di,868h
+    lea si,main7
+    mov cx,7
+    mov ah,0fh
+lopem7:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem7
+
+    mov di, 908h
+    lea si,main8
+    mov cx,7
+    mov ah,0fh
+lopem8:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem8
+
+    mov di, 0A3Ah
+    lea si,main9
+    mov cx,20
+    mov ah,0fh
+lopem9:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem9
+
+    mov di, 0B76h
+    lea si,main10
+    mov cx,25
+    mov ah,0fh
+lopem10:
+    mov al,[si]
+    stosw
+    inc si
+    loop lopem10
+
+    mov ah,7
+    int 21h
+
+    call clearall
+ret
+endp
+
+;Game screen
+bild proc
+    call border
+
+    lea si,hlths      
+    mov di,0          
+    mov cx,6          
+    mov ah,0ch        
+loph_text_display:
+    mov al,[si]
+    stosw            
+    inc si            
+    loop loph_text_display
+
+    
+    mov ch,0          
+    mov cl,hlth      
+    shr cl,1          
+    jz bild_no_hearts 
+
+    mov al,3          
+loph_hearts_display:
+    stosw            
+    loop loph_hearts_display
+bild_no_hearts:
+   
+    lea si,main1
+    mov di,88h       
+    mov cx,12
+    mov ah,0bh
+loph1:
+    mov al,[si]
+    stosw
+    inc si
+    loop loph1
+
+    xor dx,dx
+    mov di,sadd
+    mov dl,snake
+
+    es: mov word ptr [di],0752h ; 'R' 
+
+    mov ah,0ah
+    es: mov word ptr [09b4h],0a4fh ;'O'
+    es: mov word ptr [0848h],0a42h ;'B'
+    es: mov word ptr [06b0h],0a4fh ;'O'
+    es: mov word ptr [01E8h],0a54h ;'T'
+ret
+endp
+
+
+ml proc ;move left
+    push dx
+    call shift_addrs
+    sub sadd,2
+    call eat
+    call move_snake
+    pop dx
+ret
+endp
+
+mr proc 
+    push dx
+    call shift_addrs
+    add sadd,2
+    call eat
+    call move_snake
+    pop dx
+ret
+endp
+
+mu proc 
+    push dx
+    call shift_addrs
+    sub sadd,160
+    call eat
+    call move_snake
+    pop dx
+ret
+endp
+
+md proc 
+    push dx
+    call shift_addrs
+    add sadd,160
+    call eat
+    call move_snake
+    pop dx
+ret
+endp
+
+shift_addrs proc
+    xor ch,ch
+    xor bh,bh
+    mov cl,snakel
+    inc cl
+    mov al,2
+    mul cl
+    mov bl,al
+    xor dx,dx
+shiftsnake:
+    mov dx,sadd[bx-2]
+    mov sadd[bx],dx
+    sub bx,2
+    loop shiftsnake
+ret
+endp
+
+eat proc
+    push ax
+    push cx
+    mov di,sadd
+    es: cmp [di],0
+    jz no
+    es: cmp [di],20h 
+    jz wall
+    xor ch,ch
+    mov cl,letnum
+    xor si,si
+lop:
+    cmp di,letadd[si]
+    jz addf
+    add si,2
+    loop lop
+    jmp wall 
+addf:
+    mov letadd[si],0
+    xor bh,bh
+    mov bl,snakel
+    es: mov dl,[di]
+    mov snake[bx],dl
+    es: mov [di],0
+    add snakel,1
+    sub fin,1
+    cmp fin,0
+    jz chkletters
+    jmp no
+wall:
+    cmp di,320    
+    jbe wallk       
+    cmp di,3840     
+    jae wallk       
+
+    mov ax,di       
+    mov bl,160      
+    div bl       
+    
+    cmp ah,0     
+    jz wallk
+    mov ax,di
+    add ax,2        
+    mov bl,160
+    div bl
+    cmp ah,0      
+    jz wallk
+    jmp no          
+
+wallk:
+    xor bh,bh
+    mov bl,hlth
+    es: mov [bx+10],0      
+    sub hlth,2
+    cmp hlth,0
+    jnz rest
+    pop cx
+    pop ax
+    call game_over
+rest:
+    pop cx
+    pop ax
+    call restart
+no:
+    pop cx
+    pop ax
+ret
+endp
+
+move_snake proc
+    xor ch,ch
+    xor si,si
+    xor bx,bx
+    mov cl,snakel
+l1mr:
+    mov di,sadd[si]
+    mov dl,snake[bx]
+    mov dh,0bh 
+    es: mov word ptr [di],dx
+    add si,2
+    inc bx
+    loop l1mr
+    mov di,sadd[si] 
+    es: mov word ptr [di],0 
+ret
+endp
+
+border proc
+    mov ah,0
+    mov al,3
+    int 10h 
+    mov ah,6  
+    mov al,0  
+    mov bh,077h 
+    mov ch,1 
+    mov cl,0  
+    mov dh,1 
+    mov dl,79 
+    int 10h   
+
+    mov ch,2  
+    mov cl,0  
+    mov dh,23 
+    mov dl,0  
+    int 10h   
+
+    mov ch,24 
+    mov cl,0  
+    mov dh,24 
+    mov dl,79 
+    int 10h  
+
+    mov ch,2  
+    mov cl,79 
+    mov dh,23 
+    mov dl,79 
+    int 10h   
+ret
+endp
+
+restart proc
+    xor ch,ch
+    xor si,si
+    mov cl,snakel
+    inc cl
+delt:
+    mov di,sadd[si]
+    es: mov word ptr [di],0
+    add si,2
+    loop delt
+
+    mov fin,4
+    mov sadd,07D2h
+
+    mov cl,snakel 
+    inc cl       
+    xor si,si
+    inc si       
+    xor di,di
+    add di,2     
+emptsn:
+    cmp si, 6    
+    jae skip_snake_clear
+    mov snake[si],0
+skip_snake_clear:
+    cmp di, 12    
+    jae skip_sadd_clear
+    mov sadd[di],0
+skip_sadd_clear:
+    add di,2
+    inc si
+    loop emptsn
+
+    mov snakel,1
+
+    xor ch,ch
+    mov cl,letnum
+    xor si,si
+reslet:
+    mov bx,dletadd[si]
+    mov letadd[si],bx
+    add si,2
+    loop reslet
+
+    jmp startag
+ret
+endp
+
+chkletters proc
+    call move_snake 
+    cmp snake[1],'O' 
+    jnz endtestl
+    cmp snake[2],'B' 
+    jnz endtestl
+    cmp snake[3],'O'
+    jnz endtestl
+    cmp snake[4],'T' 
+    jnz endtestl
+    call win         
+endtestl:           
+    xor bh,bh
+    mov bl,hlth
+    es: mov [bx+10],0  
+    sub hlth,2
+    cmp hlth,0
+    jnz restc
+    call game_over
+restc:
+    call restart
+ret
+endp
+
+win proc
+    call clearall
+    call border
+    mov di,7BCh
+    lea si,gmwin
+    mov cx,16 
+    mov ah,0eh
+lope1w:
+    mov al,[si]
+    stosw
+    inc si
+    loop lope1w
+    mov di,85Ah
+    lea si,endtxt
+    mov cx,17 
+    mov ah,07h
+lope2:
+    mov al,[si]
+    stosw
+    inc si
+    loop lope2
+qwer1:
+    mov ah,7
+    int 21h
+    cmp al,1bh 
+    jz ext
+    jmp qwer1
+ret
+endp
+
+game_over proc
+    call clearall
+    call border
+    mov di,7C4h
+    lea si,gmov
+    mov cx,15 
+    mov ah,0ch
+lope1:
+    mov al,[si]
+    stosw
+    inc si
+    loop lope1
+    mov di,862h
+    lea si,endtxt
+    mov cx,17 
+    mov ah,07h
+lope2w:
+    mov al,[si]
+    stosw
+    inc si
+    loop lope2w
+qwer:
+    mov ah,7
+    int 21h
+    cmp al,1bh 
+    jz ext
+    jmp qwer
+ret
+endp
+
+clearall proc
+    xor cx,cx   
+    mov dh,24   
+    mov dl,79  
+    mov bh,00h  
+    mov ax,0600h 
+    int 10h
+ret
+endp
+delay proc
+    push cx
+    push dx
+    mov cx, 03h 
+outer_loop:
+    mov dx, 01h 
+inner_loop:
+    dec dx
+    jnz inner_loop
+    loop outer_loop
+    pop dx
+    pop cx
+ret
+endp
+endp
+end start
